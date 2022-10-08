@@ -1,0 +1,4 @@
+<launch>
+    <node name="wake_word" pkg="wake_word" type="wakeword.py" output="screen" >
+    </node>
+</launch>
