@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -q -y --no-install-recommends \
     dirmngr \
     gnupg2 \
     && rm -rf /var/lib/apt/lists/*
+    
 
 # setup sources.list
 RUN echo "deb http://packages.ros.org/ros/ubuntu bionic main" > /etc/apt/sources.list.d/ros1-latest.list
@@ -36,6 +37,8 @@ RUN apt install -y ros-melodic-ros-base
 RUN python3 -m pip install --upgrade pip \
      && python3 -m pip install rospkg
 
+RUN python3 -m pip install pyctcdecode
+RUN python3 -m pip install https://github.com/kpu/kenlm/archive/master.zip
 # ===========================================================================================
 # setup entrypoint
 COPY ./ros_entrypoint.sh /
