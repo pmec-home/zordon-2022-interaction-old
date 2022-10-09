@@ -55,6 +55,7 @@ RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc
 ################################################################
 ARG WORKSPACE=/interaction
 
+RUN rm -rf /jetson_voice
 COPY jetson_voice /jetson_voice
 COPY examples ${WORKSPACE}/examples
 COPY scripts ${WORKSPACE}/scripts
