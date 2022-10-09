@@ -49,3 +49,22 @@ ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
 
 RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc 
+
+################################################################
+## project install
+################################################################
+ARG WORKSPACE=/interaction
+
+COPY jetson_voice /jetson_voice
+COPY examples ${WORKSPACE}/examples
+COPY scripts ${WORKSPACE}/scripts
+COPY tests ${WORKSPACE}/tests
+
+# various late additions
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+		iproute2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+ENV PYTHONPATH="${WORKSPACE}:${PYTHONPATH}"
