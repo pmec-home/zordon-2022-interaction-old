@@ -7,14 +7,18 @@ import pyloudnorm as pyln
 from multiprocessing import Process
 import numpy as np
 
-from jetson_voice import ASR, AudioInput, AudioWavStream, AudioSamplesStream, ConfigArgParser, list_audio_devices
+from jetson_voice import ASR, AudioInput, ConfigArgParser, list_audio_devices
 from jetson_voice import TTS, ConfigArgParser, AudioOutput, list_audio_devices
 from soundfile import SoundFile
 import soundfile as sf
+import torch
+from os import getenv
+from fastapi import FastAPI, HTTPException, File
+from transformers import AutoTokenizer, AutoFeatureExtractor, AutomaticSpeechRecognitionPipeline, Wav2Vec2ForCTC
     
 parser = ConfigArgParser()
 
-parser.add_argument('--asr-model', default='quartznet', type=str, help='path to model, service name, or json config file')
+parser.add_argument('--asr-model', default='jonatasgrosman/wav2vec2-xls-r-1b-english', type=str, help='path to model, service name, or json config file')
 parser.add_argument('--tts-model', default='fastpitch_hifigan', type=str)
 parser.add_argument('--vad-model')
 parser.add_argument('--wav', default=None, type=str, help='path to input wav/ogg/flac file')
@@ -45,9 +49,22 @@ if args.list_devices:
 #     duration = audio.shape[0]/tts.sample_rate
 #     print(f"Run {run} -- Time to first audio: {latency:.3f}s. Generated {duration:.2f}s of audio. RTFx={duration/latency:.2f}.")
 
-asr = ASR(args.asr_model)
+model_name = args.asr_model
+feature_extractor = AutoFeatureExtractor.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+device = 0 if torch.cuda.is_available() else -1
+model = Wav2Vec2ForCTC.from_pretrained(model_name)
+if device >= 0:
+    model = model.to(f"cuda:{device}")
+asr = AutomaticSpeechRecognitionPipeline(feature_extractor=feature_extractor, 
+                                          model=model, 
+                                          tokenizer=tokenizer, 
+                                          device=device,
+                                          chunk_length_s=5, 
+                                          stride_length_s=(4, 2))
+
 if args.output_device:
-    audio_device = AudioOutput(args.output_device, asr.sample_rate)
+    audio_device = AudioOutput(args.output_device, 16_000)
 vad = ASR(args.vad_model)
 
 # run transcription
@@ -55,7 +72,10 @@ background_detection_tresh = BACKGROUND_DETECTION_THRESH = 15
 MAX_SAMPLES = 16_000*10
 
 def play_audio(audio):
-    audio_device.write(audio)
+    try:
+        if len(audio) > 16_000:
+            audio_device.write(audio)
+    except: pass
 
 stop_transcription = False
 while not stop_transcription:    
@@ -110,49 +130,12 @@ while not stop_transcription:
     loudness = meter.integrated_loudness(data)
 
     # loudness normalize audio to -12 dB LUFS
-    loudness_normalized_audio = pyln.normalize.loudness(data, loudness, -24.0)
+    loudness_normalized_audio = pyln.normalize.loudness(data, loudness, -18.0)
 
     output_wav_norm = SoundFile(current_time+".norm.wav", mode='w', samplerate=16_000, channels=1)
     output_wav_norm.write(loudness_normalized_audio)
-    stream = AudioWavStream(current_time+".norm.wav",
-                            sample_rate=asr.sample_rate, 
-                            chunk_size=asr.chunk_size)
-
-    # -------------------------------------------------------------------
-
-    for samples in stream:
-        end_transcription = False
-
-        results = asr(samples)
-        
-        if asr.classification:
-            print(f"class '{results[0]}' ({results[1]:.3f})")
-        else:
-            for transcript in results:
-                print(transcript['text'])
-                if transcript['end']:
-                    print('-------------------------------------------------')
-                    print("Final sentence:", transcript['text'])
-                    # manda o comando pro nlu
-                    
-                    # # run the TTS
-                    # if args.output_device and len(transcript['text']) > 5:
-                    #     for run in range(args.warmup+1):
-                    #         start = time.perf_counter()
-                    #         audio = tts(transcript['text'])
-                    #         stop = time.perf_counter()
-                    #         latency = stop-start
-                    #         duration = audio.shape[0]/tts.sample_rate
-                    #         print(f"Run {run} -- Time to first audio: {latency:.3f}s. Generated {duration:.2f}s of audio. RTFx={duration/latency:.2f}.")
-                            
-                        # output the audio
-                        # if args.output_device:
-                            # audio_device.write(audio)
-
-                    print('-------------------------------------------------')
-                    end_transcription = True
-        
-        if end_transcription: break
+    
+    print(asr(current_time+".norm.wav"))
 
     # ===================================================================
 

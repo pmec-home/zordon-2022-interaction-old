@@ -88,8 +88,8 @@ for test in test_config:
             
             if similarity > args.threshold:
                 logging.error(f"failed test '{test['wav']}' - similarity {similarity} exceeded threshold of {args.threshold}")
-                logging.error( "  expected:  '{expected_outputs[i]}'")
-                logging.error( "  actual:    '{outputs[i]}'")
+                logging.error(f"  expected:  '{expected_outputs[i]}'")
+                logging.error(f"  actual:    '{outputs[i]}'")
             else:
                 passed += 1
                 

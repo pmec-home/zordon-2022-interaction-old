@@ -3,7 +3,7 @@
 
 from .utils import (
     find_resource, list_models, global_config, ConfigDict, ConfigArgParser,
-    list_audio_devices, list_audio_inputs, list_audio_outputs, AudioInput, AudioOutput 
+    list_audio_devices, list_audio_inputs, list_audio_outputs, AudioInput, AudioSamplesStream, AudioWavStream, AudioOutput 
 )
 
 from .asr import ASR, ASRService

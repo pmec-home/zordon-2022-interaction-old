@@ -114,6 +114,47 @@ class AudioWavStream:
         self.position = 0
         return self
 
+class AudioSamplesStream:
+    """
+    Audio playback stream from samples
+    """
+    def __init__(self, samples, sample_rate, chunk_size):
+        self.samples = samples
+        self.chunk_size = chunk_size
+        self.sample_rate = sample_rate
+        
+        self.position = 0
+
+    def open(self):
+        pass
+        
+    def close(self):
+        pass
+        
+    def next(self):
+        if self.position >= len(self.samples):
+            return None
+        
+        chunk = self.samples[self.position : min(self.position + self.chunk_size, len(self.samples))]
+        
+        if len(chunk) < self.chunk_size:
+            chunk = np.pad(chunk, (0, self.chunk_size-len(chunk)), mode='constant')
+            
+        self.position += self.chunk_size
+        return chunk
+        
+    def __next__(self):
+        samples = self.next()
+        
+        if samples is None:
+            raise StopIteration
+        else:
+            return samples
+        
+    def __iter__(self):
+        self.position = 0
+        return self
+
 
 class AudioMicStream:
     """

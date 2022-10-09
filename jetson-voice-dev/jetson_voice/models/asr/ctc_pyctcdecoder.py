@@ -29,8 +29,8 @@ class CTCPyCTCDecoder(CTCDecoder):
         # set default config
         # https://github.com/NVIDIA/NeMo/blob/855ce265b80c0dc40f4f06ece76d2c9d6ca1be8d/nemo/collections/asr/modules/beam_search_decoder.py#L21
         self.config.setdefault('language_model', None)
-        self.config.setdefault('beam_width', 32)#128)
-        self.config.setdefault('alpha', 0.7 if self.language_model else 0.0)
+        self.config.setdefault('beam_width', 128)#)
+        self.config.setdefault('alpha', 0.8 if self.language_model else 0.0)
         self.config.setdefault('beta', 0.0)
         self.config.setdefault('cutoff_prob', 1.0)
         self.config.setdefault('cutoff_top_n', 40)
@@ -53,8 +53,17 @@ class CTCPyCTCDecoder(CTCDecoder):
             kenlm_model_path=self.language_model
         )
 
-        self.hotword_weight = 10
-        self.hotwords = ["zordon"]
+        self.hotword_weight = 1
+        # TODO: mover isso para um arquivo de configuração
+        self.hotwords = ["zordon", "follow", "me", "often", "creator", "favorite", 
+        "is", "in", "hitchbot", "ever", "are", "allowed", "it's", 
+        "style", "what", "for", "movies", "away", "mark", "ar", "di" 
+        "python", "call", "music", "you", "has", "was", "do", "safe", "run", 
+        "get", "self", "driving", "cars", "why", "who", "robots", "zuckerberg", 
+        "language", "lunch", "be", "invented", "killed", "compiler", "kind", "ate", 
+        "your", "like", "salad", "created", "did", "of", "programming", "robot", 
+        "shouldn't", "person", "so", "the", "angry", "yes", "no", "up", "down", "left", "we", 
+        "on", "off", "to", "go"]
             
     def decode(self, logits, **hotwords_kw):
         """

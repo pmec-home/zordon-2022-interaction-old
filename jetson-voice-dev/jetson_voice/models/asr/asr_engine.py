@@ -39,8 +39,12 @@ class ASREngine(ASRService):
         if 'streaming' not in self.config:
             self.config['streaming'] = {}
         
-        self.config['streaming'].setdefault('frame_length', 1.0)     # duration of signal frame, seconds (TODO shorter defaults for VAD/command classifiers)
-        self.config['streaming'].setdefault('frame_overlap', 0.5)    # duration of overlap before/after current frame, seconds
+        if self.config.type == 'asr':
+            self.config['streaming'].setdefault('frame_length', 2.0)
+            self.config['streaming'].setdefault('frame_overlap', 0.5)
+        else:
+            self.config['streaming'].setdefault('frame_length', 1.0)     # duration of signal frame, seconds (TODO shorter defaults for VAD/command classifiers)
+            self.config['streaming'].setdefault('frame_overlap', 0.0)    # duration of overlap before/after current frame, seconds
         
         # some config changes for streaming
         if not self.classification:
@@ -51,7 +55,7 @@ class ASREngine(ASRService):
                 self.config['ctc_decoder'] = {}
                     
             self.config['ctc_decoder'].setdefault('type', 'greedy')        # greedy or beamsearch
-            self.config['ctc_decoder'].setdefault('add_punctuation', True) # add period to the end of sentences
+            self.config['ctc_decoder'].setdefault('add_punctuation', False) # add period to the end of sentences
         
             if 'add_punctuation' in kwargs:
                 self.config['ctc_decoder']['add_punctuation'] = kwargs['add_punctuation']

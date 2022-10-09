@@ -50,16 +50,35 @@ CMD ["bash"]
 
 RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc 
 
+
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt update
+RUN apt install -y tzdata
+
+RUN apt-get install --no-install-recommends -y ffmpeg bash curl git && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}
+
+RUN pip install PyYAML==6.0 --ignore-installed 
+COPY requirements.txt .
+
+ENV TRANSFORMERS_CACHE="/app/.cache/huggingface"
+RUN pip install --no-cache-dir -r requirements.txt && \
+  pip install git+https://github.com/pytorch/fairseq@05255f96410e5b1eaf3bf59b767d5b4b7e2c3a35 
+
+ENV model=jonatasgrosman/wav2vec2-xls-r-1b-english
+RUN python -c "from os import getenv; from transformers import AutoTokenizer, AutoFeatureExtractor, Wav2Vec2ForCTC; AutoFeatureExtractor.from_pretrained(getenv('model')); tokenizer = AutoTokenizer.from_pretrained(getenv('model')); model = Wav2Vec2ForCTC.from_pretrained(getenv('model'))"
+
+RUN pip install numpy --upgrade
+RUN pip install pyloudnorm ffmpeg-python
+
+RUN apt install ffmpeg -y
+RUN git clone https://github.com/openai/whisper
+RUN cd whisper && pip install . --no-deps
+
 ################################################################
 ## project install
 ################################################################
-ARG WORKSPACE=/interaction
-
-RUN rm -rf /jetson_voice
-COPY jetson_voice /jetson_voice
-COPY examples ${WORKSPACE}/examples
-COPY scripts ${WORKSPACE}/scripts
-COPY tests ${WORKSPACE}/tests
 
 # various late additions
 RUN apt-get update && \
@@ -68,4 +87,14 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
+ARG WORKSPACE=/zordon-2022-interaction
 ENV PYTHONPATH="${WORKSPACE}:${PYTHONPATH}"
+
+#cd /home/athome/zordon-2022/zordon-2022-interaction/jetson-voice-dev && python examples/asr_w2v.py --vad-model data/networks/asr/vad_marblenet/vad_marblenet.json --output-device 24 --mic 24
+
+RUN sudo rm -rf /jetson-voice/*
+COPY . /jetson-voice/
+COPY jetson_voice ${WORKSPACE}/jetson-voice/
+COPY examples ${WORKSPACE}/examples
+COPY scripts ${WORKSPACE}/scripts
+COPY tests ${WORKSPACE}/tests
