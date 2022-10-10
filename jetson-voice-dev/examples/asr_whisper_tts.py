@@ -21,7 +21,7 @@ from transformers import AutoTokenizer, AutoFeatureExtractor, AutomaticSpeechRec
 parser = ConfigArgParser()
 
 parser.add_argument('--tts-model', default='fastpitch_hifigan', type=str)
-parser.add_argument('--vad-model') 
+# parser.add_argument('--vad-model') # tem um bug de contexto aqui, não é possível carregar o vad e o tts no mesmo script
 parser.add_argument('--wav', default=None, type=str, help='path to input wav/ogg/flac file')
 parser.add_argument('--mic', default=None, type=str, help='device name or number of input microphone')
 parser.add_argument("--output-device", default=None, type=str, help='output audio device to use')
@@ -35,13 +35,35 @@ if args.list_devices:
     list_audio_devices()
     sys.exit()
 
+# vad = ASR(args.vad_model)
+
+if args.output_device:
+    tts = TTS(args.tts_model)
+    audio_device = AudioOutput(args.output_device, tts.sample_rate)
+
 whisper_model = whisper.load_model("small")
 whisper_options = whisper.DecodingOptions(language="en", without_timestamps=True, beam_size=1)
 
-vad = ASR(args.vad_model)
+for run in range(args.warmup+1):
+    start = time.perf_counter()
+    audio = tts("testing")
+    stop = time.perf_counter()
+    latency = stop-start
+    duration = audio.shape[0]/tts.sample_rate
+    audio = torch.tensor(audio).unsqueeze(0).to("cuda")
+    audio = whisper.pad_or_trim(audio.flatten())
+    mel = whisper.log_mel_spectrogram(audio)
+    result = whisper_model.decode(mel, whisper_options)
+    print(f"Run {run} -- Time to first audio: {latency:.3f}s. Generated {duration:.2f}s of audio. RTFx={duration/latency:.2f}.")
 
-if args.output_device:
-    audio_device = AudioOutput(args.output_device, 16_000)
+def say(msg="okay"):
+    try:
+        # run the TTS
+        if args.output_device:
+            audio = tts(msg)
+            duration = audio.shape[0]/tts.sample_rate
+            audio_device.write(audio)
+    except: pass
 
 # run transcription
 background_detection_tresh = BACKGROUND_DETECTION_THRESH = 10
@@ -51,7 +73,7 @@ def play_audio(audio):
     try:
         if len(audio) > 16_000:
             audio_device.write(audio)
-    except: pass
+    except: parse
 
 stop_transcription = False
 while not stop_transcription:    
@@ -60,48 +82,59 @@ while not stop_transcription:
 
     # ===================================================================
     # create the audio input stream
+    # stream = AudioInput(wav=args.wav, mic=args.mic, 
+    #                     sample_rate=vad.sample_rate, 
+    #                     chunk_size=vad.chunk_size)
     stream = AudioInput(wav=args.wav, mic=args.mic, 
-                        sample_rate=vad.sample_rate, 
-                        chunk_size=vad.chunk_size)
+                        sample_rate=16000, 
+                        chunk_size=16000)
 
     # -------------------------------------------------------------------
 
     asr_samples = []
-    start = False
-    while background_detection_tresh > 0:
-        samples = next(stream)
+    # start = False
+    # while background_detection_tresh > 0:
+    #     samples = next(stream)
 
-        vad_results = vad(samples)
+    #     vad_results = vad(samples)
 
-        print(vad_results, "| background_detection_tresh:", background_detection_tresh)
-        if vad_results[0] == 'speech' and vad_results[1] > 0.9:
-            start = True
-            background_detection_tresh = BACKGROUND_DETECTION_THRESH
-        else:
-            background_detection_tresh -= 1
-        if start:
-            asr_samples = [*asr_samples, *samples]
+    #     print(vad_results, "| background_detection_tresh:", background_detection_tresh)
+    #     if vad_results[0] == 'speech' and vad_results[1] > 0.9:
+    #         start = True
+    #         background_detection_tresh = BACKGROUND_DETECTION_THRESH
+    #     else:
+    #         background_detection_tresh -= 1
+    #     if start:
+    #         asr_samples = [*asr_samples, *samples]
+    #     if len(asr_samples) > MAX_SAMPLES:
+    #         print('Stop recording (max samples reached)')
+    #         break
+    
+    # background_detection_tresh = BACKGROUND_DETECTION_THRESH
+
+    # ===================================================================
+    for samples in stream:
+        print('Recording')
+        asr_samples = [*asr_samples, *samples]
         if len(asr_samples) > MAX_SAMPLES:
             print('Stop recording (max samples reached)')
             break
-    
-    background_detection_tresh = BACKGROUND_DETECTION_THRESH
-
-    # ===================================================================
 
     stream.close()
     print('\naudio stream closed.')
+    say(msg="okay")
+
+    if not len(asr_samples) > 16_000//2: 
+        say(msg="I did'n understand.")
+        BACKGROUND_DETECTION_THRESH+=5
+        continue
+
+    asr_samples = np.array(asr_samples)
+    print('Audio shape:', asr_samples.shape)
 
     output_wav = SoundFile(current_time+".wav", mode='w', samplerate=16_000, channels=1)
     output_wav.write(asr_samples)
-    asr_samples = np.array(asr_samples)
-
-    if args.output_device:
-        p = Process(target=play_audio, args=(asr_samples, ))
-        p.start()
     
-    if not len(asr_samples) > 16_000//2: continue
-    print('Audio shape:', asr_samples.shape)
 
     data, rate = sf.read(current_time+".wav") # load audio
     # peak normalize audio to -1 dB
@@ -131,7 +164,9 @@ while not stop_transcription:
 
     # ===================================================================
 
-    r = input('Press q to exit or enter to run again: ')
+    say('Press q to exit or enter to run again:')
+    r = input('Press qu to exit or enter to run again: ')
+    say(msg="okay")
     if r == 'q': 
         stop_transcription = True
         break

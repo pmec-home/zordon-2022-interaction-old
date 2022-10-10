@@ -47,10 +47,10 @@ while True:
     
     if text.upper() == 'Q':
         sys.exit()
-    
+
     print('')
     
-    # run the TTS
+    # run the TTS 
     for run in range(args.warmup+1):
         start = time.perf_counter()
         audio = tts(text)

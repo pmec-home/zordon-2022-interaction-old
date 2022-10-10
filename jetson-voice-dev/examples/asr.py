@@ -15,7 +15,6 @@ import soundfile as sf
 parser = ConfigArgParser()
 
 parser.add_argument('--asr-model', default='quartznet', type=str, help='path to model, service name, or json config file')
-parser.add_argument('--tts-model', default='fastpitch_hifigan', type=str)
 parser.add_argument('--vad-model')
 parser.add_argument('--wav', default=None, type=str, help='path to input wav/ogg/flac file')
 parser.add_argument('--mic', default=None, type=str, help='device name or number of input microphone')
@@ -32,18 +31,6 @@ if args.list_devices:
     sys.exit()
     
 # load the model
-
-# if args.output_device:
-    # tts = TTS(args.tts_model)
-    # audio_device = AudioOutput(args.output_device, tts.sample_rate)
-
-# for run in range(args.warmup+1):
-#     start = time.perf_counter()
-#     audio = tts("testing")
-#     stop = time.perf_counter()
-#     latency = stop-start
-#     duration = audio.shape[0]/tts.sample_rate
-#     print(f"Run {run} -- Time to first audio: {latency:.3f}s. Generated {duration:.2f}s of audio. RTFx={duration/latency:.2f}.")
 
 asr = ASR(args.asr_model)
 if args.output_device:
