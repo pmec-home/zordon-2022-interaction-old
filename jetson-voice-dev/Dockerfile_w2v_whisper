@@ -75,7 +75,7 @@ RUN pip install pyloudnorm ffmpeg-python
 RUN apt install ffmpeg -y
 RUN git clone https://github.com/openai/whisper
 RUN cd whisper && pip install . --no-deps
-
+RUN python -c "import whisper; whisper.load_model('base'); whisper.load_model('small'); whisper.load_model('tiny')"
 ################################################################
 ## project install
 ################################################################
