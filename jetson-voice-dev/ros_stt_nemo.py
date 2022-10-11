@@ -32,8 +32,6 @@ class STTNemo:
                                 chunk_size=self.stt.chunk_size)
 
         for samples in stream:
-            end_transcription = False
-
             results = self.stt(samples)
             
             if self.stt.classification:
@@ -43,8 +41,10 @@ class STTNemo:
                     logging.debug(transcript['text'])
                     if transcript['end']:
                         print("Final sentence:", transcript['text'])
+                        with open(f'{audio_path}.txt', 'w') as txt:
+                            txt.write(transcript['text'])
                         return transcript['text']
-                        end_transcription = True
+
         return None
 
 if __name__ == "__main__":

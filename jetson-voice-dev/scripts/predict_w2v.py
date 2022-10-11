@@ -62,6 +62,8 @@ hotwords = ["zordon", "follow", "me", "often", "creator", "favorite",
 
 for audio_path in args.wavs:
     print(audio_path)
+    if os.path.isfile(os.path.join(args.output_dir, os.path.basename(audio_path) + ".txt")): 
+        continue
     try:
         st = time.time()
         audio, sr = torchaudio.load(audio_path)
@@ -73,9 +75,8 @@ for audio_path in args.wavs:
         # save TXT
         print('Saving' ,os.path.join(args.output_dir, os.path.basename(audio_path) + ".txt"))
         with open(os.path.join(args.output_dir, os.path.basename(audio_path) + ".txt"), "a", encoding="utf-8") as txt:
-            write_txt(result["text"], file=txt)
+            print(result["text"], file=txt)
     except Exception as e:
-        raise e
         print('ERROR', audio_path, str(e))
         continue
 

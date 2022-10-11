@@ -36,6 +36,8 @@ class STTWhisper:
             st = time.time()
             mel = self.stt.log_mel_spectrogram(audio)
             result = self.stt.decode(mel, **kwargs)
+            with open(f'{audio_path}.txt', 'w') as txt:
+                txt.write(result.text)
             logging.debug(f"{result}")
             end = time.time()
             logging.debug(f"\ttook {end-st} seconds")

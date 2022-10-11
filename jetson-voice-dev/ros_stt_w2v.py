@@ -24,6 +24,8 @@ class STTW2V:
         feature_extractor = AutoFeatureExtractor.from_pretrained(model_name)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         device = 0 if torch.cuda.is_available() else -1
+        if device == -1:
+            logging.error("Error detecting cuda device!")
         model = Wav2Vec2ForCTC.from_pretrained(model_name)
         if device >= 0:
             model = model.to(f"cuda:{device}")
@@ -56,6 +58,8 @@ class STTW2V:
             audio, sr = torchaudio.load(audio_path)
             audio = torch.mean(audio, dim=0)
             result = self.stt(audio.numpy(), **kwargs)
+            with open(f'{audio_path}.txt', 'w') as txt:
+                txt.write(result["text"])
         except Exception as e:
             logging.error(f"Trascribing {audio_path}: {str(e)}")
             return None

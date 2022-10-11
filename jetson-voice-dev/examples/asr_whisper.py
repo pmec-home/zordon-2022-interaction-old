@@ -35,7 +35,7 @@ if args.list_devices:
     list_audio_devices()
     sys.exit()
 
-whisper_model = whisper.load_model("small")
+whisper_model = whisper.load_model("small")  # tiny small base medium large 
 whisper_options = whisper.DecodingOptions(language="en", without_timestamps=True, beam_size=1)
 
 vad = ASR(args.vad_model)
@@ -118,11 +118,11 @@ while not stop_transcription:
     output_wav_norm.write(loudness_normalized_audio)
     
     print("Loading", current_time+".norm.wav")
+    st = time.time()
     audio = whisper.load_audio(file=current_time+".norm.wav", sr=16_000)
     audio = whisper.pad_or_trim(audio.flatten())
     audio = torch.from_numpy(audio).to("cuda")
     
-    st = time.time()
     mel = whisper.log_mel_spectrogram(audio)
     result = whisper_model.decode(mel, whisper_options)
     end = time.time()

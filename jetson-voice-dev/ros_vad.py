@@ -24,11 +24,15 @@ class VADRecorder:
                  max_samples=16_000*10, 
                  normalize=True,
                  mic=24,
+                 target_norm_lufs=-12.0,
                  background_detection_patience=15):
                  
         logging.info(f"Creating VAD model")
         self.vad = ASR(vad_model)
-
+        self.normalize = normalize
+        self.max_samples = max_samples
+        self.background_detection_patience = background_detection_patience
+        self.target_norm_lufs = target_norm_lufs 
         logging.info(f"Starting mic streamming on device {mic}")
         self.stream = AudioInput(mic=mic, 
                                  sample_rate=vad.sample_rate, 
@@ -37,51 +41,53 @@ class VADRecorder:
     def __call__(self): 
         t = time.localtime()
         current_time = time.strftime("%H_%M_%S", t)
+        background_detection_tresh = self.background_detection_tresh
 
         final_samples = []
         while background_detection_tresh > 0:
             samples = next(stream)
-            vad_results = vad(samples)
+            vad_results = self.vad(samples)
             logging.info(str(vad_results) + " | background_detection_tresh: " + 
                          str(background_detection_tresh))
             if vad_results[0] == 'speech' and vad_results[1] > 0.9:
-                background_detection_tresh = BACKGROUND_DETECTION_THRESH
+                background_detection_tresh = self.background_detection_tresh
             else:
                 background_detection_tresh -= 1
             asr_samples = [*asr_samples, *samples]
             if len(asr_samples) > MAX_SAMPLES:
                 logging.info('Stop recording (max samples reached)')
                 break
-        
-        background_detection_tresh = BACKGROUND_DETECTION_THRESH
 
         logging.info('Closing stream')
         stream.close()
         print('\naudio stream closed.')
 
         audio_path = current_time+".wav"
-        output_wav = SoundFile(, mode='w', samplerate=16_000, channels=1)
-        output_wav.write(asr_samples)
-        asr_samples = np.array(asr_samples)
-        
-        logging.debug('Audio shape:', asr_samples.shape)
 
-        if not self.normalize: return audio_path
-        audio_path = current_time+".norm.wav"
+        if self.normalize:
+            output_wav = SoundFile(, mode='w', samplerate=16_000, channels=1)
+            output_wav.write(asr_samples)
+            asr_samples = np.array(asr_samples)
+            
+            logging.debug('Audio shape:', asr_samples.shape)
 
-        data, rate = sf.read(current_time+".wav") # load audio
-        # peak normalize audio to -1 dB
-        peak_normalized_audio = pyln.normalize.peak(data, -1.0)
+            if not self.normalize: return audio_path
+            audio_path = current_time+".norm.wav"
 
-        # measure the loudness first 
-        meter = pyln.Meter(rate) # create BS.1770 meter
-        loudness = meter.integrated_loudness(data)
+            data, rate = sf.read(current_time+".wav") # load audio
+            # peak normalize audio to -1 dB
+            peak_normalized_audio = pyln.normalize.peak(data, -1.0)
 
-        # loudness normalize audio to -12 dB LUFS
-        loudness_normalized_audio = pyln.normalize.loudness(data, loudness, -24.0)
+            # measure the loudness first 
+            meter = pyln.Meter(rate) # create BS.1770 meter
+            loudness = meter.integrated_loudness(data)
 
-        output_wav_norm = SoundFile(audio_path, mode='w', samplerate=16_000, channels=1)
-        output_wav_norm.write(loudness_normalized_audio)
+            # loudness normalize audio to -12 dB LUFS
+            loudness_normalized_audio = pyln.normalize.loudness(data, loudness, self.target_norm_lufs)
+
+            output_wav_norm = SoundFile(audio_path, mode='w', samplerate=16_000, channels=1)
+            output_wav_norm.write(loudness_normalized_audio)
+
         return audio_path
 
 if __name__ == "__main__":
