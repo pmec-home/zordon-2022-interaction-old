@@ -27,7 +27,7 @@ class STTNemo:
         
     def __call__(self, audio_path):  
         logging.info(f"Starting streamming on audio {audio_path}")
-        stream = AudioWavStream(audio_path",
+        stream = AudioWavStream(audio_path,
                                 sample_rate=self.stt.sample_rate, 
                                 chunk_size=self.stt.chunk_size)
 

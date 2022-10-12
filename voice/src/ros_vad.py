@@ -65,7 +65,7 @@ class VADRecorder:
         audio_path = current_time+".wav"
 
         if self.normalize:
-            output_wav = SoundFile(, mode='w', samplerate=16_000, channels=1)
+            output_wav = SoundFile(audio_path, mode='w', samplerate=16_000, channels=1)
             output_wav.write(asr_samples)
             asr_samples = np.array(asr_samples)
             

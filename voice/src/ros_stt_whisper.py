@@ -22,7 +22,7 @@ import logging
 class STTWhisper:
 
     def __init__(self, model_name="base"):
-        self.stt = whisper.load_model("medium")
+        self.stt = whisper.load_model(model_name)
         self.decoding_options = whisper.DecodingOptions(
             language="en", without_timestamps=True, beam_size=1)
         

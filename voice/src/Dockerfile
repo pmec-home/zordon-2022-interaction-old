@@ -69,3 +69,5 @@ RUN apt-get update && \
     && apt-get clean
 
 ENV PYTHONPATH="${WORKSPACE}:${PYTHONPATH}"
+
+RUN pip install netifaces

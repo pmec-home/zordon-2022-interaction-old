@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(zordon_chatbot)
+project(chatbot)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,8 +8,8 @@ project(zordon_chatbot)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roboga_nlu
-  roboga_stt
+  nlu
+  voice
   rospy
   std_msgs
   wake_word
