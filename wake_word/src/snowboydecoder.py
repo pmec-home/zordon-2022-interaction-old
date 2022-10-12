@@ -16,8 +16,8 @@ logger.setLevel(logging.DEBUG)
 TOP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 RESOURCE_FILE = os.path.join(TOP_DIR, "resources/common.res")
-DETECT_DING = os.path.join(TOP_DIR, "resources/ding.wav")
-DETECT_DONG = os.path.join(TOP_DIR, "resources/dong.wav")
+DETECT_DING = os.path.join(TOP_DIR, "resources/activate.wav")
+DETECT_DONG = os.path.join(TOP_DIR, "resources/activate.wav")
 
 def py_error_handler(filename, line, function, err, fmt):
     pass
@@ -94,8 +94,8 @@ class HotwordDetector(object):
 
     def __init__(self, decoder_model,
                  resource=RESOURCE_FILE,
-                 sensitivity=[],
-                 audio_gain=1,
+                 sensitivity=0.6,
+                 audio_gain=10,
                  apply_frontend=False):
 
         tm = type(decoder_model)
@@ -128,9 +128,9 @@ class HotwordDetector(object):
     def start(self, detected_callback=play_audio_file,
               interrupt_check=lambda: None,
               sleep_time=0.03,
-              audio_recorder_callback=None,
-              silent_count_threshold=15,
-              recording_timeout=100):
+              audio_recorder_callback=lambda p: print(p),
+              silent_count_threshold=0.2,
+              recording_timeout=1):
         """
         Start the voice detector. For every `sleep_time` second it checks the
         audio buffer for triggering keywords. If detected, then call
@@ -175,15 +175,16 @@ class HotwordDetector(object):
         print('sample_rate', self.detector.SampleRate())
         self.stream_in = self.audio.open(
             input_device_index=24,
-            input=True, output=False,
+            input=True, 
             format=self.audio.get_format_from_width(
                 self.detector.BitsPerSample() / 8),
             channels=self.detector.NumChannels(),
             rate=self.detector.SampleRate(),
+	        frames_per_buffer=16000,
+	        # frames_per_buffer=2048,
+            stream_callback=audio_callback)
             # channels=2,
             # rate=44100,
-	    frames_per_buffer=2048,
-            stream_callback=audio_callback)
 
         if interrupt_check():
             logger.debug("detect voice return")
@@ -214,7 +215,6 @@ class HotwordDetector(object):
             status = self.detector.RunDetection(data)
             if status == -1:
                 logger.warning("Error initializing streams or reading audio data")
-
             #small state machine to handle recording of phrase after keyword
             if state == "PASSIVE":
                 if status > 0: #key word found
@@ -250,6 +250,7 @@ class HotwordDetector(object):
                     fname = self.saveMessage()
                     audio_recorder_callback(fname)
                     state = "PASSIVE"
+                    os.system(f'aplay {TOP_DIR}/resources/activate.wav -D hw:2,0')
                     continue
 
                 recordingCount = recordingCount + 1

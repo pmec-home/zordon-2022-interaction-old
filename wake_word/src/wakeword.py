@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 import os
 directory = os.path.dirname(os.path.realpath(__file__))
-TOP_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # from precise_runner import PreciseEngine
 from precise import PreciseRunner
-
-import rospy
-from std_msgs.msg import Empty
-import std_srvs.srv as srv
 
 import time
 import sys
@@ -32,22 +27,20 @@ def interrupt_callback():
 signal.signal(signal.SIGINT, signal_handler)
 
 def play_audio(filename: str):
-    """
-    Args:
-        filename: Audio filename
-    """
-
-    player = 'play' if platform.system() == 'Darwin' else 'aplay'
-    Popen([player, '-q', filename])
+	"""
+	Args:
+	filename: Audio filename
+	"""
+	os.system(f'aplay {filename} -D hw:2,0')
+	# player = 'play' if platform.system() == 'Darwin' else 'aplay'
+	# Popen([player, '-q', filename, '-D hw:2,0'])
 
 
 def activate_notify():
-    # audio = directory+'/resources/activate.wav'
-    # audio = TOP_DIR+'/resources/okay2.wav'
-	os.system(f'aplay {TOP_DIR}/resources/okay2.wav -D hw:2,0')
+    audio = directory+'/resources/okay2.wav'
     #audio = abspath(dirname(abspath(__file__)) + '/../' + audio)
 
-    # play_audio(audio)
+    play_audio(audio)
 
 class Precise():
 	def __init__(self, model: str, callback):
@@ -73,9 +66,6 @@ class WakeWord():
 		print('Starting... ')
 		#self.engine = Precise('/resources/hey-mycroft-2', self.hotword_detected)
 		self.engine = Snowboy('/resources/computer.umdl', self.hotword_detected)
-		rospy.init_node('wake_word', anonymous=True)
-		self.service = rospy.Service('zordon/wake_word', srv.Empty, self.activate)
-		self.pub = rospy.Publisher('zordon/wake_work/detected', Empty)
 		self.active = True
 		self.detected = False
 
@@ -85,7 +75,6 @@ class WakeWord():
 		self.detected = False
 		while(not self.detected):
 			time.sleep(0.1)
-		return srv.EmptyResponse()
 
 	def run(self):
 		print("starting wakeword listener...")
@@ -94,11 +83,9 @@ class WakeWord():
 		self.engine.terminate()
 
 	def hotword_detected(self):
+		activate_notify()
 		print("hotword detected")
 		if(self.active):
-			activate_notify()
-			msg = Empty()
-			self.pub.publish(msg)
 			self.active = False
 			self.detected = True
 			print("hotword detected")
