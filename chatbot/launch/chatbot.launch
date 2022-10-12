@@ -1,0 +1,24 @@
+<launch>
+    <include file="$(find wake_word)/launch/wake_word.launch">
+    <include file="$(find speech_to_text_vad)/launch/voice.launch">
+    </include>
+    </include>
+    <group if="$(arg qa)">
+            <include file="$(find speech_to_text_whisper)/launch/voice.launch">
+            </include>
+    </group>
+    <group if="$(arg cmd)">
+            <include file="$(find speech_to_text_nemo)/launch/voice.launch">
+            </include>
+    </group>
+    <!-- <include file="$(find speech_to_text_w2v)/launch/voice.launch"> -->
+    </include>
+    <include file="$(find text_to_speech)/launch/voice.launch">
+    </include>
+    <include file="$(find zordon_nlu)/launch/rasa_nlu.launch">
+    </include>
+    <!--
+    <node name="chatbot" pkg="zordon_chatbot" type="planner.py" output="screen" >
+    </node>
+     -->
+</launch>
