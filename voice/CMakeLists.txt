@@ -10,7 +10,7 @@ project(voice)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
-#  message_generation
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -49,14 +49,15 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Nlu.msg
+#   Message1.msg
+#   Message2.msg
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Nlu.srv
-# )
+add_service_files(
+  FILES
+  tts.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -66,10 +67,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
- )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -102,8 +103,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES zordon_nlu
- CATKIN_DEPENDS rospy std_msgs message_runtime
+#  LIBRARIES roboga_tts
+#  CATKIN_DEPENDS rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -120,7 +121,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/zordon_nlu.cpp
+#   src/${PROJECT_NAME}/roboga_tts.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -131,7 +132,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/zordon_nlu_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/roboga_tts_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -188,7 +189,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_zordon_nlu.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_roboga_tts.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

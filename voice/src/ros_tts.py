@@ -13,7 +13,10 @@ import soundfile as sf
 
 import rospy
 
-from std_srvs.srv import Trigger, TriggerResponse
+from std_srvs.srv import Trigger, TriggerResponse   
+from std_msgs.msg import String
+from voice.srv import tts as tts_srv
+from voice.srv import ttsResponse
 
 import logging
 
@@ -21,18 +24,19 @@ class TTSNemo:
 
     def __init__(self, 
                  output_device=24,
-                 tts_model="fastpitch_hifigan"):
+                 warmup=5,
+                 tts_model="/home/athome/zordon-2022/zordon-2022-interaction/voice/src/data/networks/tts/fastpitch_hifigan/fastpitch_hifigan.json"):
                  
         logging.info(f"Creating tts model")
         self.tts = TTS(tts_model)
         self.audio_device = output_device
 
-        for run in range(args.warmup+1):
+        for run in range(warmup+1):
             start = time.perf_counter()
             audio = self.tts("warmup")
             stop = time.perf_counter()
             latency = stop-start
-            duration = audio.shape[0]/tts.sample_rate
+            duration = audio.shape[0]/self.tts.sample_rate
             logging.debug(f"Run {run} -- Time to first audio: {latency:.3f}s. Generated {duration:.2f}s of audio. RTFx={duration/latency:.2f}.")
         
     def __call__(self, text):  
@@ -45,16 +49,14 @@ class TTSNemo:
             return False
 
 if __name__ == "__main__":
-    tts = TTSNemo()
+    # tts = TTSNemo()
     
     def handler(req):
         print(req)
         success = tts(req.data)
-        return TriggerResponse(
-            success=success,
-            message=req.data
-        )
+        return ttsResponse()
     rospy.init_node('speech_to_text_tts', anonymous=True)
-    service = rospy.Service('zordon/tts', Trigger, handler)    
+    service = rospy.Service('zordon/tts', tts_srv, handler) 
+    rospy.Subscriber("tts", String, handler)
     
     rospy.spin()

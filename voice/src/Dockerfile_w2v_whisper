@@ -98,3 +98,5 @@ COPY jetson_voice ${WORKSPACE}/jetson-voice/
 COPY examples ${WORKSPACE}/examples
 COPY scripts ${WORKSPACE}/scripts
 COPY tests ${WORKSPACE}/tests
+
+RUN pip install netifaces

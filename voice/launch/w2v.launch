@@ -1,0 +1,4 @@
+<launch>
+    <node name="speech_to_text_w2v" pkg="voice" type="ros_stt_w2v.py" output="screen" >
+    </node>
+</launch>
