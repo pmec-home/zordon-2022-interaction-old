@@ -24,19 +24,20 @@ import logging
 class VADRecorder:
 
     def __init__(self, 
-                 max_samples=16_000*100, 
+                 max_samples=16_000*10, 
                  normalize=True,
                  mic=24,
                  target_norm_lufs=-12.0,
                  warmup=5,
                  audio_prefix='',
-                 background_detection_patience=600):
+                 chunk_size=4_000,
+                 background_detection_patience=(16_000*5)//4_000):
         
         self.mic = mic
         self.prefix = audio_prefix
 
         print(f"Creating service zordon/vad")
-        # service = rospy.Service('zordon/vad', Trigger, self) 
+        service = rospy.Service('zordon/vad', Trigger, self) 
 
         
         print(f"Creating VAD model")
@@ -52,7 +53,7 @@ class VADRecorder:
         collect_chunks) = self.utils
         print(f"Creating VAD model: DONE")
         self.sample_rate = 16_000
-        self.chunk_size = 4_000
+        self.chunk_size = chunk_size
 
         self.model.to("cuda")
 
@@ -67,8 +68,6 @@ class VADRecorder:
             print(f"ERROR creating streaming on device {self.mic}")
             raise e
             
-        # for run in range(warmup+1):
-        #     print(self.vad(np.empty(4000)))
         self.background_detection_patience = background_detection_patience
         self.normalize = normalize
         self.max_samples = max_samples
@@ -168,8 +167,6 @@ class VADRecorder:
 
 
 if __name__ == "__main__":
-    # rospy.init_node('speech_to_text_vad')
+    rospy.init_node('speech_to_text_vad')
     vad_recorder = VADRecorder()
-    while True:
-        vad_recorder(None)
-    # rospy.spin()
+    rospy.spin()
