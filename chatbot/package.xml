@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>chatbot</name>
+  <name>zordon_chatbot</name>
   <version>0.0.0</version>
   <description>The zordon_chatbot package</description>
 
@@ -49,18 +49,18 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>nlu</build_depend>
-  <build_depend>voice</build_depend>
+  <build_depend>roboga_nlu</build_depend>
+  <build_depend>roboga_stt</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>wake_word</build_depend>
-  <build_export_depend>nlu</build_export_depend>
-  <build_export_depend>voice</build_export_depend>
+  <build_export_depend>roboga_nlu</build_export_depend>
+  <build_export_depend>roboga_stt</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>wake_word</build_export_depend>
-  <exec_depend>nlu</exec_depend>
-  <exec_depend>voice</exec_depend>
+  <exec_depend>roboga_nlu</exec_depend>
+  <exec_depend>roboga_stt</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>wake_word</exec_depend>

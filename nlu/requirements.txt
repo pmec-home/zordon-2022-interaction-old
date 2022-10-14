@@ -1,5 +1,4 @@
-rasa-nlu==0.14.3
-rasa-nlu[tensorflow]==0.14.3
+
 chatette==1.4.0
 rasa-core-sdk==0.12.2
 spacy==2.0.18

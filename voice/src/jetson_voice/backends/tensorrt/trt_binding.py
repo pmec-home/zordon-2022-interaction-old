@@ -29,7 +29,7 @@ class Binding:
         
         self.dynamic = (self.size <= 0)   
         self.profiles = []
-            
+        
         if self.input:
             for i in range(model.trt_engine.num_optimization_profiles):
                 profile = model.trt_engine.get_profile_shape(i, index)
@@ -56,7 +56,8 @@ class Binding:
             return
             
         self.host = None if self.input else cuda.pagelocked_empty(self.shape, dtype=trt.nptype(self.dtype))
-        self.device = cuda.mem_alloc(self.size)
+        print("self.size", self.size)
+        self.device = cuda.mem_alloc(self.size)  # problema aqui
         
     def set_shape(self, shape):
         """

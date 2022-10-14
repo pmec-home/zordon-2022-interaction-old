@@ -2,16 +2,17 @@ FROM dustynv/ros:melodic-ros-base-l4t-r32.7.1
 
 WORKDIR /workspace
 
-COPY . ./
-
 RUN apt-get update
-RUN apt-get install -y python3-pip python3-dev
-RUN apt install -y build-essential gfortran libatlas-base-dev python3.6-dev
-RUN apt-get install -y pkg-config libpng-dev libfreetype6-dev libjpeg8-dev zlib1g-dev
-RUN apt-get install -y python3-matplotlib python3-numpy python3-future python3-ujson python3-markupsafe
-RUN apt-get install -y python3-scipy python3-h5py python3-pil
-RUN python3 -m pip install cython pybind11 cppy
-RUN python3 -m pip install matplotlib 
-RUN python3 -m pip install tensorflow-aarch64==1.2
+RUN apt -y install  libpng-dev libfreetype6-dev python3.6-dev
+RUN apt -y install python3.6 python3.6-dev
+RUN apt-get -y install libhdf5-serial-dev hdf5-tools libhdf5-dev zlib1g-dev zip libjpeg8-dev liblapack-dev libblas-dev gfortran
+RUN apt-get -y install python3-pip
+RUN python3 -m pip install -U pip testresources setuptools==49.6.0
+RUN python3 -m pip install matplotlib==2.2.5 pyaml
+RUN python3 -m pip install sklearn_crfsuite==0.3.6 h5py==2.10.0
+RUN wget https://developer.download.nvidia.com/compute/redist/jp/v46/tensorflow/tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
+RUN python3 -m pip install pip install tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
+RUN python3 -m pip install rasa-nlu==0.14.3 
 
+COPY . ./
 RUN python3 -m pip install -r roboga_nlu/requirements.txt

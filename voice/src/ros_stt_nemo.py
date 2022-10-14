@@ -9,19 +9,22 @@ import numpy as np
 
 from jetson_voice import ASR, AudioInput, AudioWavStream, AudioSamplesStream, ConfigArgParser, list_audio_devices
 from soundfile import SoundFile
+
+import numpy as np
+
 import soundfile as sf
 
 import rospy
 
-from std_srvs.srv import Trigger, TriggerResponse
+from voice.srv import voice as voice_srv
+from voice.srv import voiceResponse
 
 import logging
 
 class STTNemo:
 
     def __init__(self, 
-                 stt_model="quartznet"):
-                 
+                 stt_model="/home/athome/zordon-2022/zordon-2022-interaction/voice/src/data/networks/asr/quartznet-15x5_en/quartznet.beamsearch_lm.json"):
         logging.info(f"Creating STT model")
         self.stt = ASR(stt_model)
         
@@ -41,10 +44,10 @@ class STTNemo:
                     logging.debug(transcript['text'])
                     if transcript['end']:
                         print("Final sentence:", transcript['text'])
-                        with open(f'{audio_path}.txt', 'w') as txt:
-                            txt.write(transcript['text'])
+                        with open(f'{audio_path}.txt', 'a') as txt:
+                            txt.write(f'{self.__class__.__name__}: {transcript["text"]}')
                         return transcript['text']
-
+        
         return None
 
 if __name__ == "__main__":
@@ -53,11 +56,9 @@ if __name__ == "__main__":
     def handler(req):
         print(req)
         transcription = stt(req.data)
-        return TriggerResponse(
-            success=True if transcription is not None else False,
-            message=transcription
-        )
+        print(transcription)
+        return voiceResponse()
     rospy.init_node('speech_to_text_stt_nemo', anonymous=True)
-    service = rospy.Service('zordon/stt/nemo', Trigger, handler)    
+    service = rospy.Service('zordon/stt/nemo', voice_srv, handler)    
     
     rospy.spin()

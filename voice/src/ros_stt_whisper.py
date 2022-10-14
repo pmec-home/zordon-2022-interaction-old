@@ -15,9 +15,8 @@ import whisper
 
 import rospy
 
-from std_srvs.srv import Trigger, TriggerResponse
-
-import logging
+from voice.srv import voice as voice_srv
+from voice.srv import voiceResponse
 
 class STTWhisper:
 
@@ -25,24 +24,31 @@ class STTWhisper:
         self.stt = whisper.load_model(model_name)
         self.decoding_options = whisper.DecodingOptions(
             language="en", without_timestamps=True, beam_size=1)
+        # warmup
+        mel = whisper.log_mel_spectrogram(torch.empty(torch.Size([480000])).to("cuda"))
+        self.stt.decode(mel, self.decoding_options)
         
-    def __call__(self, audio_path, **kwargs):
-        kwargs.set_default("decoding_options", self.decoding_options)
-        logging.info(f"Starting transcribing audio {audio_path}")
+    def __call__(self, audio_path, decoding_options=None):
+        if not decoding_options:
+            decoding_options = self.decoding_options
+        print(f"Starting transcribing audio {audio_path}")
         try:
-            audio = self.stt.pad_or_trim(audio.flatten())
+            audio = whisper.load_audio(file=audio_path, sr=16_000)
+            audio = whisper.pad_or_trim(audio.flatten())
             audio = torch.from_numpy(audio).to("cuda")
+            print(audio.shape)
             
             st = time.time()
-            mel = self.stt.log_mel_spectrogram(audio)
-            result = self.stt.decode(mel, **kwargs)
-            with open(f'{audio_path}.txt', 'w') as txt:
-                txt.write(result.text)
-            logging.debug(f"{result}")
+            mel = whisper.log_mel_spectrogram(audio)
+            result = self.stt.decode(mel, decoding_options)
+            with open(f'{audio_path}.txt', 'a') as txt:
+                txt.write(f'{self.__class__.__name__}: {result.text}')
+            print(f"{result}")
             end = time.time()
-            logging.debug(f"\ttook {end-st} seconds")
+            print(f"\ttook {end-st} seconds")
         except Exception as e:
-            logging.error(f"Trascribing {audio_path}: {str(e)}")
+            print(f"Trascribing {audio_path}: {str(e)}")
+            raise e
             return None
 
         return result.text
@@ -53,11 +59,9 @@ if __name__ == "__main__":
     def handler(req):
         print(req)
         transcription = stt(req.data)
-        return TriggerResponse(
-            success=True if transcription is not None else False,
-            message=transcription
-        )
+        print(transcription)
+        return voiceResponse()
     rospy.init_node('speech_to_text_stt_whisper', anonymous=True)
-    service = rospy.Service('zordon/stt/whisper', Trigger, handler)    
+    service = rospy.Service('zordon/stt/whisper', voice_srv, handler)    
     
     rospy.spin()

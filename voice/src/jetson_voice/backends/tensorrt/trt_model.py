@@ -104,6 +104,7 @@ class TRTModel:
         
         # setup inputs + copy to GPU
         def setup_binding(binding, input):
+            print("binding", binding)
             input = input.astype(trt.nptype(binding.dtype), copy=False)
             if binding.dynamic: 
                 binding.set_shape(input.shape)

@@ -15,8 +15,8 @@ import rospy
 
 from std_srvs.srv import Trigger, TriggerResponse   
 from std_msgs.msg import String
-from voice.srv import tts as tts_srv
-from voice.srv import ttsResponse
+from voice.srv import voice as voice_srv
+from voice.srv import voiceResponse
 
 import logging
 
@@ -29,7 +29,7 @@ class TTSNemo:
                  
         logging.info(f"Creating tts model")
         self.tts = TTS(tts_model)
-        self.audio_device = output_device
+        self.audio_device = AudioOutput(output_device, self.tts.sample_rate)
 
         for run in range(warmup+1):
             start = time.perf_counter()
@@ -39,24 +39,26 @@ class TTSNemo:
             duration = audio.shape[0]/self.tts.sample_rate
             logging.debug(f"Run {run} -- Time to first audio: {latency:.3f}s. Generated {duration:.2f}s of audio. RTFx={duration/latency:.2f}.")
         
+        audio = self.tts("Hello, I am Zordon")
+        self.audio_device.write(audio)
+
     def __call__(self, text):  
         logging.info(f"Starting synthetizing {text}")
         try:
-            audio = self.tts("warmup")
+            audio = self.tts(text)
             self.audio_device.write(audio)
             return True
         except:
             return False
 
 if __name__ == "__main__":
-    # tts = TTSNemo()
-    
+    tts = TTSNemo()
     def handler(req):
         print(req)
         success = tts(req.data)
-        return ttsResponse()
-    rospy.init_node('speech_to_text_tts', anonymous=True)
-    service = rospy.Service('zordon/tts', tts_srv, handler) 
-    rospy.Subscriber("tts", String, handler)
+        return voiceResponse()
+    rospy.init_node('text_to_speech_nemo')
+    service = rospy.Service('zordon/tts', voice_srv, handler) 
+    # rospy.Subscriber("tts", String, handler)
     
     rospy.spin()

@@ -3,7 +3,7 @@ import os
 
 import rospy
 from std_msgs.msg import String
-from roboga_nlu.srv import Nlu, NluResponse
+#from roboga_nlu.srv import Nlu, NluResponse
 from rasa_nlu.model import Interpreter
 
 if __name__ == "__main__":
