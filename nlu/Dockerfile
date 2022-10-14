@@ -12,7 +12,7 @@ RUN python3 -m pip install matplotlib==2.2.5 pyaml
 RUN python3 -m pip install sklearn_crfsuite==0.3.6 h5py==2.10.0
 RUN wget https://developer.download.nvidia.com/compute/redist/jp/v46/tensorflow/tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
 RUN python3 -m pip install pip install tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
-RUN python3 -m pip install rasa-nlu==0.14.3 
+RUN python3 -m pip install rasa-nlu==0.14.3 numpy==1.18 scipy==1.1.0 scikit-learn==0.21.3
 
 COPY . ./
 RUN python3 -m pip install -r roboga_nlu/requirements.txt

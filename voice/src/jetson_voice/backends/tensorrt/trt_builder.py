@@ -8,7 +8,7 @@ import logging
 import tensorrt as trt
 
 import pycuda.driver as cuda
-import pycuda.autoinit
+# import pycuda.autoinit
 
 TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE)
 

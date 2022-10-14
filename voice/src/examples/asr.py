@@ -37,6 +37,8 @@ if args.output_device:
     audio_device = AudioOutput(args.output_device, asr.sample_rate)
 vad = ASR(args.vad_model)
 
+vad(np.empty(4000))
+
 # run transcription
 background_detection_tresh = BACKGROUND_DETECTION_THRESH = 15
 MAX_SAMPLES = 16_000*10
