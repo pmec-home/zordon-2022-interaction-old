@@ -4,7 +4,7 @@
 import sys
 import time
 import pyloudnorm as pyln
-from multiprocessing import Process
+import pycuda.driver as cuda
 import numpy as np
 
 from jetson_voice import TTS, ConfigArgParser, AudioOutput, list_audio_devices
@@ -28,6 +28,11 @@ class TTSNemo:
                  tts_model="/home/athome/zordon-2022/zordon-2022-interaction/voice/src/data/networks/tts/fastpitch_hifigan/fastpitch_hifigan.json"):
                  
         logging.info(f"Creating tts model")
+        service = rospy.Service('zordon/tts', voice_srv, self) 
+
+        cuda.init()
+        self.device = cuda.Device(0) 
+
         self.tts = TTS(tts_model)
         self.audio_device = AudioOutput(output_device, self.tts.sample_rate)
 
@@ -42,23 +47,20 @@ class TTSNemo:
         audio = self.tts("Hello, I am Zordon")
         self.audio_device.write(audio)
 
-    def __call__(self, text):  
-        logging.info(f"Starting synthetizing {text}")
-        try:
-            audio = self.tts(text)
-            self.audio_device.write(audio)
-            return True
-        except:
-            return False
+    def __call__(self, req):
+        print(req)
+
+        ctx = self.device.make_context()
+
+        logging.info(f"Starting synthetizing {req.data}")
+        audio = self.tts(req.data)
+        self.audio_device.write(audio)
+
+        ctx.pop()  
+        
+        return voiceResponse()
 
 if __name__ == "__main__":
-    tts = TTSNemo()
-    def handler(req):
-        print(req)
-        success = tts(req.data)
-        return voiceResponse()
     rospy.init_node('text_to_speech_nemo')
-    service = rospy.Service('zordon/tts', voice_srv, handler) 
-    # rospy.Subscriber("tts", String, handler)
-    
+    tts = TTSNemo()
     rospy.spin()
