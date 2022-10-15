@@ -29,12 +29,11 @@ class TTSNemo:
                  
         logging.info(f"Creating tts model")
         service = rospy.Service('zordon/tts', voice_srv, self) 
-
+        self.output_device = output_device
         cuda.init()
         self.device = cuda.Device(0) 
 
         self.tts = TTS(tts_model)
-        self.audio_device = AudioOutput(output_device, self.tts.sample_rate)
 
         for run in range(warmup+1):
             start = time.perf_counter()
@@ -44,8 +43,12 @@ class TTSNemo:
             duration = audio.shape[0]/self.tts.sample_rate
             logging.debug(f"Run {run} -- Time to first audio: {latency:.3f}s. Generated {duration:.2f}s of audio. RTFx={duration/latency:.2f}.")
         
-        audio = self.tts("Hello, I am Zordon")
-        self.audio_device.write(audio)
+        try:
+            audio_device = AudioOutput(self.output_device, self.tts.sample_rate)
+            audio = self.tts("Hello, I am Zordon")
+            audio_device.write(audio)
+        except Exception as e:
+            print("ERROR", str(e))
 
     def __call__(self, req):
         print(req)
@@ -54,7 +57,8 @@ class TTSNemo:
 
         logging.info(f"Starting synthetizing {req.data}")
         audio = self.tts(req.data)
-        self.audio_device.write(audio)
+        audio_device = AudioOutput(self.output_device, self.tts.sample_rate)
+        audio_device.write(audio)
 
         ctx.pop()  
         

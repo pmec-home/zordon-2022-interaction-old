@@ -102,7 +102,7 @@ class VADRecorder:
         final_samples = []
         all_samples = []
 
-        start_recording = False
+        voice_detected = False
         while background_detection_patience > 0:
             samples = next(stream)
             if len(samples) < self.chunk_size:
@@ -112,12 +112,12 @@ class VADRecorder:
             if prob > 0.9:
                 background_detection_patience = self.background_detection_patience
                 print("Detected voice")
-                start_recording = True
+                voice_detected = True
             else:
                 background_detection_patience -= 1
                 print(background_detection_patience)
 
-            if start_recording:
+            if voice_detected:
                 final_samples = [*final_samples, *samples]
             all_samples = [*all_samples, *samples]
 
@@ -161,7 +161,7 @@ class VADRecorder:
 
         print(f"Saving audio {os.path.abspath(audio_name)}")
         return TriggerResponse(
-            success=True,
+            success=voice_detected,
             message=os.path.abspath(audio_name)
         )
 

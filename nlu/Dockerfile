@@ -8,11 +8,13 @@ RUN apt -y install python3.6 python3.6-dev
 RUN apt-get -y install libhdf5-serial-dev hdf5-tools libhdf5-dev zlib1g-dev zip libjpeg8-dev liblapack-dev libblas-dev gfortran
 RUN apt-get -y install python3-pip
 RUN python3 -m pip install -U pip testresources setuptools==49.6.0
-RUN python3 -m pip install matplotlib==2.2.5 pyaml
-RUN python3 -m pip install sklearn_crfsuite==0.3.6 h5py==2.10.0
+# RUN python3 -m pip install matplotlib==2.2.5 pyaml
+RUN python3 -m pip install pyaml
+RUN python3 -m pip install sklearn_crfsuite==0.3.6 
+#h5py==2.10.0
 RUN wget https://developer.download.nvidia.com/compute/redist/jp/v46/tensorflow/tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
 RUN python3 -m pip install pip install tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
-RUN python3 -m pip install rasa-nlu==0.14.3 numpy==1.18 scipy==1.1.0 scikit-learn==0.21.3
+RUN python3 -m pip install rasa-nlu==0.14.3 numpy==1.18 scipy==1.1.0 scikit-learn==0.20.4
 
 COPY . ./
 RUN python3 -m pip install -r roboga_nlu/requirements.txt
