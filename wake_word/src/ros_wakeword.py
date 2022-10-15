@@ -102,6 +102,7 @@ class WakeWord():
 			self.active = False
 			self.detected = True
 			print("hotword detected")
+		self.engine.terminate()
 
 if __name__ == "__main__":
 	wakeword = WakeWord()
