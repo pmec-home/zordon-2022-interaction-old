@@ -250,7 +250,6 @@ class HotwordDetector(object):
                     fname = self.saveMessage()
                     audio_recorder_callback(fname)
                     state = "PASSIVE"
-                    os.system(f'aplay {TOP_DIR}/resources/activate.wav -D hw:2,0')
                     continue
 
                 recordingCount = recordingCount + 1

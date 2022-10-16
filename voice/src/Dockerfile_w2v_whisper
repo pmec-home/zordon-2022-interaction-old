@@ -99,4 +99,6 @@ COPY examples ${WORKSPACE}/examples
 COPY scripts ${WORKSPACE}/scripts
 COPY tests ${WORKSPACE}/tests
 
-RUN pip install netifaces
+RUN pip install netifaces num2words
+
+ARG WORKSPACE=/interaction_ws/

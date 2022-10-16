@@ -70,4 +70,4 @@ RUN apt-get update && \
 
 ENV PYTHONPATH="${WORKSPACE}:${PYTHONPATH}"
 
-RUN pip install netifaces
+RUN pip install netifaces num2words

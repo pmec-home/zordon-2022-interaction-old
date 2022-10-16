@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+import re
 import sys
 import time
 import pyloudnorm as pyln
@@ -10,13 +11,11 @@ import numpy as np
 from jetson_voice import TTS, ConfigArgParser, AudioOutput, list_audio_devices
 from soundfile import SoundFile
 import soundfile as sf
-
+from num2words import num2words
 import rospy
 
-from std_srvs.srv import Trigger, TriggerResponse   
-from std_msgs.msg import String
-from voice.srv import voice as voice_srv
-from voice.srv import voiceResponse
+from voice.srv import tts as tts_srv
+from voice.srv import ttsResponse
 
 import logging
 
@@ -25,10 +24,11 @@ class TTSNemo:
     def __init__(self, 
                  output_device=24,
                  warmup=5,
+                 normalize=True,
                  tts_model="/home/athome/zordon-2022/zordon-2022-interaction/voice/src/data/networks/tts/fastpitch_hifigan/fastpitch_hifigan.json"):
-                 
+        self.normalize = normalize
         logging.info(f"Creating tts model")
-        service = rospy.Service('zordon/tts', voice_srv, self) 
+        service = rospy.Service('zordon/tts', tts_srv, self) 
         self.output_device = output_device
         cuda.init()
         self.device = cuda.Device(0) 
@@ -50,19 +50,46 @@ class TTSNemo:
         except Exception as e:
             print("ERROR", str(e))
 
+    def _normalize(self, text):
+        print("Normalizing", text)
+        text = text.lower()
+        words = []
+        for word in text.split():
+            if word.isdigit():
+                word = num2words(word)
+            words.append(word)
+        text = ' '.join(words)
+        text = re.sub('[^a-zA-Z\s]', "", text)
+        print("Normalized text:", text)
+        return text
+
     def __call__(self, req):
         print(req)
 
-        ctx = self.device.make_context()
+        logging.info(f"Starting synthetizing {req.text}")
+        input = req.text
+        if self.normalize:
+            input = self._normalize(input)
+        input = input[:256]
 
-        logging.info(f"Starting synthetizing {req.data}")
-        audio = self.tts(req.data)
-        audio_device = AudioOutput(self.output_device, self.tts.sample_rate)
-        audio_device.write(audio)
-
-        ctx.pop()  
+        try:
+            # Gabiarra:
+            ctx = self.device.make_context()  
+            audio = self.tts(input)
+            if round(sum(audio)/len(audio), 1) == 0.0:
+                ctx = self.device.make_context()
+                audio = self.tts(input)
+                ctx.pop()  
+            ctx.pop()  
         
-        return voiceResponse()
+            audio_device = AudioOutput(self.output_device, self.tts.sample_rate)
+            audio_device.write(audio)
+            
+        except Exception as e:
+            print("ERROR tts: {e}")
+
+        
+        return ttsResponse()
 
 if __name__ == "__main__":
     rospy.init_node('text_to_speech_nemo')

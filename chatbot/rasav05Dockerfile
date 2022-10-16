@@ -18,3 +18,4 @@ RUN python3 -m pip install rasa-nlu==0.14.3 numpy==1.18 scikit-learn==0.20.4
 
 COPY . ./
 RUN python3 -m pip install -r ./requirements.txt
+RUN python3 -m pip install scipy

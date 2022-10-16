@@ -6,7 +6,6 @@ import time
 import pyloudnorm as pyln
 import numpy as np
 
-import pycuda.driver as cuda
 from jetson_voice import AudioInput, AudioWavStream
 from jetson_voice.utils import audio_to_float
 from soundfile import SoundFile
@@ -17,27 +16,28 @@ import torch
 torch.set_num_threads(1)
 
 from pprint import pprint
-from std_srvs.srv import Trigger, TriggerResponse
+from voice.srv import vad as vad_srv
+from voice.srv import vadResponse
 
 import logging
 
 class VADRecorder:
 
     def __init__(self, 
-                 max_samples=16_000*10, 
+                 max_samples=16_000*6, 
                  normalize=True,
                  mic=24,
                  target_norm_lufs=-12.0,
                  warmup=5,
                  audio_prefix='',
                  chunk_size=4_000,
-                 background_detection_patience=(16_000*5)//4_000):
+                 background_detection_patience=(16_000*4)//4_000):
         
         self.mic = mic
         self.prefix = audio_prefix
 
         print(f"Creating service zordon/vad")
-        service = rospy.Service('zordon/vad', Trigger, self) 
+        service = rospy.Service('zordon/vad', vad_srv, self) 
 
         
         print(f"Creating VAD model")
@@ -45,7 +45,7 @@ class VADRecorder:
                               model='silero_vad',
                               force_reload=True,
                               onnx=False)
-
+        self.model.to("cuda")
         (get_speech_timestamps,
         save_audio,
         read_audio,
@@ -54,8 +54,6 @@ class VADRecorder:
         print(f"Creating VAD model: DONE")
         self.sample_rate = 16_000
         self.chunk_size = chunk_size
-
-        self.model.to("cuda")
 
         self.vad_iterator = VADIterator(self.model)
 
@@ -66,7 +64,9 @@ class VADRecorder:
                                 chunk_size=self.chunk_size)
         except Exception as e:
             print(f"ERROR creating streaming on device {self.mic}")
-            raise e
+        for i in range(5):
+            prob = self.model(torch.rand((1,16_000), dtype=torch.float32).to("cuda"), 16_000).item()
+            print(prob)
             
         self.background_detection_patience = background_detection_patience
         self.normalize = normalize
@@ -83,6 +83,8 @@ class VADRecorder:
         return sound
         
     def __call__(self, req):
+        prob = self.model(torch.rand((1,16_000), dtype=torch.float32).to("cuda"), 16_000).item()
+        os.system(f'aplay /home/athome/zordon-2022/zordon-2022-interaction/voice/resources/okay2.wav -D hw:2,0')
         print(req)
         
         print(f"Starting mic streaming on device {self.mic}")
@@ -109,6 +111,7 @@ class VADRecorder:
                 break
             prob = self.model(torch.tensor(VADRecorder.int2float(samples)).to("cuda"), 16_000).item()
             print(prob)
+
             if prob > 0.9:
                 background_detection_patience = self.background_detection_patience
                 print("Detected voice")
@@ -159,10 +162,11 @@ class VADRecorder:
             output_wav_norm = SoundFile(audio_name, mode='w', samplerate=16_000, channels=1)
             output_wav_norm.write(loudness_normalized_audio)
 
+        os.system(f'aplay /home/athome/zordon-2022/zordon-2022-interaction/voice/resources/activate.wav -D hw:2,0')
+                    
         print(f"Saving audio {os.path.abspath(audio_name)}")
-        return TriggerResponse(
-            success=voice_detected,
-            message=os.path.abspath(audio_name)
+        return vadResponse(
+            audio_path=os.path.abspath(audio_name)
         )
 
 

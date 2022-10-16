@@ -56,7 +56,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  voice.srv
+  stt.srv
+  tts.srv
+  vad.srv
 )
 
 ## Generate actions in the 'action' folder

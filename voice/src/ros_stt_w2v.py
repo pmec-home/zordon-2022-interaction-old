@@ -20,8 +20,8 @@ from transformers import (
 
 import rospy
 
-from voice.srv import voice as voice_srv
-from voice.srv import voiceResponse
+from voice.srv import stt as stt_srv
+from voice.srv import sttResponse
 
 import logging
 
@@ -79,10 +79,12 @@ if __name__ == "__main__":
     
     def handler(req):
         print(req)
-        transcription = stt(req.data)
+        transcription = stt(req.audio_path)
         print(transcription)
-        return voiceResponse()
+        return sttResponse(
+            transcription=transcription
+        )
     rospy.init_node('speech_to_text_stt_w2v', anonymous=True)
-    service = rospy.Service('zordon/stt/w2v', voice_srv, handler)    
+    service = rospy.Service('zordon/stt/w2v', stt_srv, handler)    
     
     rospy.spin()
