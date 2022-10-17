@@ -76,6 +76,11 @@ RUN apt install ffmpeg -y
 RUN git clone https://github.com/openai/whisper
 RUN cd whisper && pip install . --no-deps
 RUN python -c "import whisper; whisper.load_model('base'); whisper.load_model('small'); whisper.load_model('tiny')"
+# ===========================================================================================
+# chatbot
+
+RUN python3 -m pip install spacy==3.4.1
+RUN python3 -m spacy download en_core_web_sm
 ################################################################
 ## project install
 ################################################################
@@ -99,6 +104,11 @@ COPY examples ${WORKSPACE}/examples
 COPY scripts ${WORKSPACE}/scripts
 COPY tests ${WORKSPACE}/tests
 
-RUN pip install netifaces num2words
+# chatbot
+
+RUN python3 -m pip install spacy==3.4.1
+RUN python3 -m spacy download en_core_web_sm
+# ===========================================================================================
+RUN pip install netifaces num2words pyloudnorm
 
 ARG WORKSPACE=/interaction_ws/

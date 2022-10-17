@@ -9,7 +9,7 @@ import logging
 import requests
 import json
 import pandas as pd
-# import spacy
+import spacy
 import os
 import re
 from datetime import datetime
@@ -26,7 +26,7 @@ from voice.srv import stt as stt_srv
 from voice.srv import tts as tts_srv
 from voice.srv import vad as vad_srv
 
-# from zordon_nlu.srv import Nlu
+from interacao_nlu.srv import Nlu
 
 ###########################################################
 # List of Intens
@@ -53,7 +53,7 @@ class Intents(Enum):
 ##########################################################
 #Questions and Answer dataset
 QandA = pd.read_csv(directory+'/resources/questions_and_answers.csv')
-# nlp = spacy.load('en_core_web_sm')
+nlp = spacy.load('en_core_web_sm')
 nlp = None
 def load_nlp(word_list):
     global nlp
@@ -71,7 +71,7 @@ def compareToNlpList(phrase, nlp_list):
         ranks[-1]['text'] = element.text
         ranks[-1]['similarity'] = nlp_phrase.similarity(element)
     return sorted(ranks, key=lambda x: x['similarity'], reverse=True)
-# nlp_list = load_nlp(QandA['QUESTION'])
+nlp_list = load_nlp(QandA['QUESTION'])
 #The database
 
 
@@ -186,12 +186,12 @@ class ChatBot():
 		rospy.wait_for_service('/zordon/tts')
 		rospy.wait_for_service('/zordon/stt/whisper')
 		# rospy.wait_for_service('/zordon/stt/w2v')
-		# rospy.wait_for_service('/zordon/nlu')
+		rospy.wait_for_service('/zordon/nlu')
 		self.vad = rospy.ServiceProxy('/zordon/vad', vad_srv)
 		self.tts = rospy.ServiceProxy('/zordon/tts', tts_srv)
 		self.stt = rospy.ServiceProxy('/zordon/stt/whisper', stt_srv)
 		self.wake_word = rospy.ServiceProxy('/zordon/wake_word', Empty)
-		# self.nlu = rospy.ServiceProxy('/zordon/nlu', Nlu)
+		self.nlu = rospy.ServiceProxy('/zordon/nlu', Nlu)
 		self.planner = Planner()
 
 	def listen(self):
@@ -202,10 +202,10 @@ class ChatBot():
 		print(vad_response)
 		stt_response = self.stt(vad_response.audio_path)
 		print(stt_response)
-		tts_response = self.tts(stt_response.transcription)
-		# nlu_response = self.nlu(stt_response.message)
-		# print(nlu_response)
-		# self.tts(self.planner.read(nlu_response))
+		#tts_response = self.tts(stt_response.transcription)
+		nlu_response = self.nlu(stt_response.transcription)
+		print(nlu_response)
+		self.tts(self.planner.read(nlu_response))
 
 if __name__ == "__main__":
 	chatbot = ChatBot()
