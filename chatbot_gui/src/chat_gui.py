@@ -1,4 +1,5 @@
-#Creating GUI with tkinter
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import tkinter
 from tkinter import *
 import format_to_ros as ftr

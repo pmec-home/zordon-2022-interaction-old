@@ -75,7 +75,7 @@ nlp_list = load_nlp(QandA['QUESTION'])
 #The database
 
 
-class Planner():
+class Chatbot():
     def __init__(self):
         # define the name of the action which can then be included in training stories
         x = "sup"
@@ -84,53 +84,15 @@ class Planner():
         global nlp_list, QandA
         print(nlu_response)
         message = nlu_response.message
-        if nlu_response.intent is None:
-            intent = Intents.QUESTION
-        else:
-            intent = Intents(nlu_response.intent)
-        entities = Entities(nlu_response.entities)
-        if(intent == Intents.QUESTION):
-            rank = compareToNlpList(message, nlp_list)
-            if(float(rank[0]['similarity']) > 0.65):
-                #Grab answer form the Q and A dataframe
-                answer = QandA[QandA['QUESTION'] == rank[0]['text']]['ANSWER'].iloc[0]
-                #If the answer is in the format ${code} grab the code inside and run it
-                if '$' in answer:
-                    code = re.search('\${(.*)}', answer).group(1)
-                    answer = eval(code)
-                return answer
-        if(intent == Intents.GREET):
-            return "Hello there, how can I help you?"
-        if(intent == Intents.MOVE):
-            if(entities.size() > 0):
-                if(entities.hasAllOfTypes(["location", "person"])):
-                    return "Ok, I will move to the " + entities.getFromTypes(["location", "direction"])[0]
-    
-            return "Where do you want me move?"
-        if(intent == Intents.FOLLOW):
-            msg = "I will start folowing"
-            target = "you"
-            location = ""
-            if(entities.size() > 0):
-                if(entities.hasType("pronoun")):
-                    pronoun = entities.getFromType("pronoun")[0]
-                    if(pronoun == "him" or pronoun == "her"):
-                        target = pronoun
-                if(entities.hasType("gender")):
-                    gender = entities.getFromType("gender")[0]
-                    if(gender == "male"):
-                        target = "him"
-                    else:
-                        target = "her"
-                if(entities.hasType("name")):
-                    target = entities.getFromType(["name"])[0]
-                if(entities.hasType("location")):
-                    location = "to the " + entities.getFromType("location")[0]
-            
-            msg += " "+target
-            msg += " "+location
-
-            return msg
+        rank = compareToNlpList(message, nlp_list)
+        if(float(rank[0]['similarity']) > 0.65):
+            #Grab answer form the Q and A dataframe
+            answer = QandA[QandA['QUESTION'] == rank[0]['text']]['ANSWER'].iloc[0]
+            #If the answer is in the format ${code} grab the code inside and run it
+            if '$' in answer:
+                code = re.search('\${(.*)}', answer).group(1)
+                answer = eval(code)
+            return answer
         return "Sorry I did not understand your question"
 
 class Entities():
@@ -198,7 +160,7 @@ class ChatBot():
         self.stt = rospy.ServiceProxy('/zordon/stt/whisper', stt_srv)
         self.wake_word = rospy.ServiceProxy('/zordon/wake_word', Empty)
         self.nlu = rospy.ServiceProxy('/zordon/nlu', Nlu)
-        self.planner = Planner()
+        self.chatbot = Chatbot()
 
     def listen(self):
         print('Waiting wake word...')
@@ -211,7 +173,7 @@ class ChatBot():
         #tts_response = self.tts(stt_response.transcription)
         nlu_response = self.nlu(stt_response.transcription)
         print(nlu_response)
-        self.tts(self.planner.read(nlu_response))
+        self.tts(self.chatbot.read(nlu_response))
 
 if __name__ == "__main__":
     chatbot = ChatBot()

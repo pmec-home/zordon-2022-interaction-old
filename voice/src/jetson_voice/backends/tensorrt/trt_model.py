@@ -75,8 +75,8 @@ class TRTModel:
             else:
                 self.outputs.append(binding)
         
-        for binding in self.bindings:
-            print(f'\n{binding}')
+        # for binding in self.bindings:
+        #     print(f'\n{binding}')
 
     def execute(self, inputs, sync=True, return_dict=False, **kwargs):
         """
@@ -104,7 +104,7 @@ class TRTModel:
         
         # setup inputs + copy to GPU
         def setup_binding(binding, input):
-            print("binding", binding)
+            # print("binding", binding)
             input = input.astype(trt.nptype(binding.dtype), copy=False)
             if binding.dynamic: 
                 binding.set_shape(input.shape)

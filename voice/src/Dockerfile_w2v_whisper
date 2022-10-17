@@ -109,6 +109,6 @@ COPY tests ${WORKSPACE}/tests
 RUN python3 -m pip install spacy==3.4.1
 RUN python3 -m spacy download en_core_web_sm
 # ===========================================================================================
-RUN pip install netifaces num2words pyloudnorm
+RUN pip install netifaces num2words
 
 ARG WORKSPACE=/interaction_ws/

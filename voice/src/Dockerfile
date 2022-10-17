@@ -100,15 +100,18 @@ ENV PYTHONPATH="${WORKSPACE}:${PYTHONPATH}"
 RUN sudo rm -rf /jetson-voice/*
 COPY . /jetson-voice/
 COPY jetson_voice ${WORKSPACE}/jetson-voice/
-COPY examples ${WORKSPACE}/examples
-COPY scripts ${WORKSPACE}/scripts
-COPY tests ${WORKSPACE}/tests
+
+RUN mkdir -p /interacao_voice_ws
+WORKDIR /interacao_voice_ws
+COPY . ./interacao_voice_ws/src
+RUN /bin/bash -c '. /opt/ros/melodic/setup.bash; catkin_make'
+
+RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc 
+RUN echo "source /interacao_voice_ws/devel/setup.bash" >> /root/.bashrc 
 
 # chatbot
 
-RUN python3 -m pip install spacy==3.4.1
-RUN python3 -m spacy download en_core_web_sm
-# ===========================================================================================
-RUN pip install netifaces num2words pyloudnorm
-
-ARG WORKSPACE=/interaction_ws/
+# RUN python3 -m pip install spacy==3.4.1
+# RUN python3 -m spacy download en_core_web_sm
+# # ===========================================================================================
+# RUN pip install netifaces num2words pyloudnorm

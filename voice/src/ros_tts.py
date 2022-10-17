@@ -53,6 +53,24 @@ class TTSNemo:
     def _normalize(self, text):
         print("Normalizing", text)
         text = text.lower()
+        for c in 'ãáàâ':
+            if c in text:
+                text = text.replace(c, 'a')
+        for c in 'ç':
+            if c in text:
+                text = text.replace(c, 'ç')
+        for c in 'éê':
+            if c in text:
+                text = text.replace(c, 'e')
+        for c in 'í':
+            if c in text:
+                text = text.replace(c, 'i')
+        for c in 'õóô':
+            if c in text:
+                text = text.replace(c, 'o')
+        for c in 'úü':
+            if c in text:
+                text = text.replace(c, 'u')
         words = []
         for word in text.split():
             if word.isdigit():

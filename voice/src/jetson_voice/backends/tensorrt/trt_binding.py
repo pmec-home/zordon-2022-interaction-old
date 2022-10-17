@@ -56,7 +56,7 @@ class Binding:
             return
             
         self.host = None if self.input else cuda.pagelocked_empty(self.shape, dtype=trt.nptype(self.dtype))
-        print("self.size", self.size)
+        # print("self.size", self.size)
         self.device = cuda.mem_alloc(self.size)  # problema aqui
         
     def set_shape(self, shape):

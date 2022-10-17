@@ -12,10 +12,18 @@ RUN apt -y install python3-pip
 RUN python3 -m pip install -U pip testresources setuptools==49.6.0
 RUN apt -y install python3-tk
 RUN python3 -m pip install tk
-COPY . ./
 
-CMD ["./mainframe.py"]
-ENTRYPOINT ["python3"]
+RUN mkdir -p src/chatbot_gui
+COPY . ./src/chatbot_gui
+RUN /bin/bash -c '. /opt/ros/melodic/setup.bash; catkin_make'
+
+RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc 
+RUN echo "source /workspace/devel/setup.bash" >> /root/.bashrc 
+COPY ros_entrypoint.sh /ros_entrypoint.sh
+
+ENTRYPOINT ["/ros_entrypoint.sh"]
+# CMD ["roslaunch", "chatbot_gui", "gui.launch"]
+
 
 
 

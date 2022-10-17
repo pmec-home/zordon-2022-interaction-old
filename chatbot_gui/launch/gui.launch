@@ -1,0 +1,4 @@
+<launch>
+    <node name="gui" pkg="chatbot_gui" type="chat_gui.py" output="screen" >
+    </node>
+</launch>
