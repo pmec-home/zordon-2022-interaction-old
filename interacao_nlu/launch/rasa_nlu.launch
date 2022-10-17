@@ -1,0 +1,4 @@
+<launch>
+    <node name="interacao_nlu" pkg="interacao_nlu" type="rasa_interpreter.py" output="screen" >
+    </node>
+</launch>
