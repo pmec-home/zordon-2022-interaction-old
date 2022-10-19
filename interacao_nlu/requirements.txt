@@ -1,5 +1,4 @@
 chatette==1.4.0
 rasa-core-sdk==0.12.2
-spacy==3.4.1
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.4.0/en_core_web_sm-3.4.0.tar.gz#en_core_web_sm
 service_identity

@@ -168,8 +168,8 @@ class AudioMicStream:
         self.sample_rate = sample_rate
         self.chunk_size = chunk_size
         
-        print('Audio Input Device:')
-        pprint.pprint(self.device_info)
+        # print('Audio Input Device:')
+        # pprint.pprint(self.device_info)
     
     def __del__(self):
         self.close()
@@ -265,7 +265,7 @@ class AudioOutput:
                             frames_per_buffer=self.chunk_size,
                             output=True, output_device_index=self.device_id)
         
-        logging.info(f"opened audio output device {self.device_id} ({self.device_info['name']})")
+        # logging.info(f"opened audio output device {self.device_id} ({self.device_info['name']})")
         
     def close(self):
         if self.stream is not None:

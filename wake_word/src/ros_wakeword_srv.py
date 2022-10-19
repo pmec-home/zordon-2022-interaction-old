@@ -58,17 +58,15 @@ class WakeWord:
         print(f"Creating wakeword")
         self.service = rospy.Service('zordon/wake_word', Empty, self) 
         
-        self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.6)
+        self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.7)
 
         activate_notify()
 
     def callback(self):
         self.detector.terminate()
-        print(f"Stopping wakeword")
 
     def __call__(self, req):
         print(req)
-        print(f"Listening wakeword")
         self.detector.start(detected_callback=self.callback, interrupt_check=interrupt_callback, sleep_time=0.03)
         print("Hotword detected")
         return EmptyResponse()

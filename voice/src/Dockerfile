@@ -72,9 +72,7 @@ RUN python -c "from os import getenv; from transformers import AutoTokenizer, Au
 RUN pip install numpy --upgrade
 RUN pip install pyloudnorm ffmpeg-python
 
-RUN apt install ffmpeg -y
-RUN git clone https://github.com/openai/whisper
-RUN cd whisper && pip install . --no-deps
+RUN apt install ffmpeg -y && git clone https://github.com/openai/whisper && cd whisper && pip install . --no-deps
 RUN python -c "import whisper; whisper.load_model('base'); whisper.load_model('small'); whisper.load_model('tiny')"
 # ===========================================================================================
 # chatbot
@@ -106,8 +104,8 @@ WORKDIR /interacao_voice_ws
 COPY . ./interacao_voice_ws/src
 RUN /bin/bash -c '. /opt/ros/melodic/setup.bash; catkin_make'
 
-RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc 
-RUN echo "source /interacao_voice_ws/devel/setup.bash" >> /root/.bashrc 
+RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc && \
+    echo "source /interacao_voice_ws/devel/setup.bash" >> /root/.bashrc 
 
 # chatbot
 

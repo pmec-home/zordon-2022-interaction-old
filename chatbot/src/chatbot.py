@@ -14,8 +14,8 @@ import os
 import re
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
 directory = os.path.dirname(os.path.realpath(__file__))
+log_dir = "/home/athome/zordon-2022/zordon-2022-interaction/chatbot/logs"
 
 import sys
 current_module = sys.modules[__name__]
@@ -75,15 +75,13 @@ nlp_list = load_nlp(QandA['QUESTION'])
 #The database
 
 
-class Chatbot():
+class _Chatbot():
     def __init__(self):
         # define the name of the action which can then be included in training stories
         x = "sup"
 
-    def read(self, nlu_response):
+    def read(self, message):
         global nlp_list, QandA
-        print(nlu_response)
-        message = nlu_response.message
         rank = compareToNlpList(message, nlp_list)
         if(float(rank[0]['similarity']) > 0.65):
             #Grab answer form the Q and A dataframe
@@ -95,63 +93,26 @@ class Chatbot():
             return answer
         return "Sorry I did not understand your question"
 
-class Entities():
-    def __init__(self, entities):
-        self.entities = [eval(x) for x in entities]
-
-    def hasType(self, type):
-        for entity in self.entities:
-            if(entity["entity"] == type):
-                return True
-        return False
-
-    def hasAnyOfTypes(self, types):
-        for type in types:
-            if(self.hasType(type)):
-                return True
-        return False
-
-    def hasAllOfTypes(self, types):
-        for type in types:
-            if(not self.hasType(type)):
-                return False
-        return True
-
-    def countOfType(self, type):
-        count = 0
-        for entity in self.entities:
-            if(entity["entity"] == type):
-                count += 1
-        return count
-
-    def getFromType(self, type):
-        typeList = []
-        for entity in self.entities:
-            if(entity["entity"] == type):
-                typeList.append(entity["value"])
-        return typeList
-
-    def getFromTypes(self, types):
-        typesList = []
-        for type in types:
-            typesList.extend(self.getFromType(type))
-        return typesList
-
-    def size(self):
-        return len(self.entities)
-
-    def __repr__(self):
-        return str(self.entities)
-
 class ChatBot():
-    def __init__(self):
+    def __init__(self, log_dir):
+        
+        now = datetime.now()
+        dt_string = now.strftime("%d_%m_%Y-%H_%M_%S")
+        self.log_file = f'{log_dir}/{dt_string}.log'
+
+        print('init node')
         rospy.init_node("chatbot")
+        print("wait_for_service('/zordon/wake_word')")
         rospy.wait_for_service('/zordon/wake_word')
+        print("wait_for_service('/zordon/vad')")
         rospy.wait_for_service('/zordon/vad')
+        print("wait_for_service('/zordon/tts')")
         rospy.wait_for_service('/zordon/tts')
+        print("wait_for_service('/zordon/whisper')")
         rospy.wait_for_service('/zordon/stt/whisper')
         # rospy.wait_for_service('/zordon/stt/w2v')
-        rospy.wait_for_service('/zordon/nlu')	
+        # print("wait_for_service('/zordon/nlu')")
+        # rospy.wait_for_service('/zordon/nlu')	
 
         print("========================================")
 
@@ -159,23 +120,36 @@ class ChatBot():
         self.tts = rospy.ServiceProxy('/zordon/tts', tts_srv)
         self.stt = rospy.ServiceProxy('/zordon/stt/whisper', stt_srv)
         self.wake_word = rospy.ServiceProxy('/zordon/wake_word', Empty)
-        self.nlu = rospy.ServiceProxy('/zordon/nlu', Nlu)
-        self.chatbot = Chatbot()
+        # self.nlu = rospy.ServiceProxy('/zordon/nlu', Nlu)
+        self.chatbot = _Chatbot()
+
+    def _write_log(self, msg):
+        with open(self.log_file, 'a') as log:
+            print(datetime.now(), msg, file=log)
 
     def listen(self):
         print('Waiting wake word...')
+        print('Waiting wake word')
         self.wake_word()
+        self._write_log('Recording voice')
         print('Listening command...')
         vad_response = self.vad()
         print(vad_response)
+        self._write_log(f'Voice recorded: {vad_response.audio_path}')
+        os.system(f'cp {vad_response.audio_path} {log_dir}')
         stt_response = self.stt(vad_response.audio_path)
+        self._write_log(f'Transcription: {stt_response.transcription}')
         print(stt_response)
         #tts_response = self.tts(stt_response.transcription)
-        nlu_response = self.nlu(stt_response.transcription)
-        print(nlu_response)
-        self.tts(self.chatbot.read(nlu_response))
+        # nlu_response = self.nlu(stt_response.transcription)
+        # print(nlu_response)
+        answer = self.chatbot.read(stt_response.transcription)
+        self._write_log(f'Answer: {answer}')
+        self.tts(answer)
+        self._write_log('='*60)
 
 if __name__ == "__main__":
-    chatbot = ChatBot()
+    print("Creating ChatBot")
+    chatbot = ChatBot(log_dir)
     while(True):
         chatbot.listen()

@@ -183,12 +183,17 @@ class Entities():
 
 class ChatBot():
     def __init__(self):
-        rospy.init_node("chatbot")
+        rospy.init_node("planner")
+        print("wait_for_service('/zordon/wake_word')")
         rospy.wait_for_service('/zordon/wake_word')
+        print("wait_for_service('/zordon/vad')")
         rospy.wait_for_service('/zordon/vad')
+        print("wait_for_service('/zordon/tts')")
         rospy.wait_for_service('/zordon/tts')
+        print("wait_for_service('/zordon/whisper')")
         rospy.wait_for_service('/zordon/stt/whisper')
         # rospy.wait_for_service('/zordon/stt/w2v')
+        print("wait_for_service('/zordon/nlu')")
         rospy.wait_for_service('/zordon/nlu')	
 
         print("========================================")

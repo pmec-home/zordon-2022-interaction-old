@@ -13,10 +13,16 @@ RUN python3 -m pip install -U pip testresources setuptools==49.6.0
 RUN python3 -m pip install pyaml 
 RUN python3 -m pip install sklearn_crfsuite==0.3.6 
 RUN wget https://developer.download.nvidia.com/compute/redist/jp/v46/tensorflow/tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
+RUN apt-get -y install python3-protobuf
+RUN python3 -m pip install protobuf==3.6.1 Cython
+RUN apt-get -y install python3-h5py python3-numpy python3-termcolor
 RUN python3 -m pip install pip install tensorflow-1.15.5+nv21.12-cp36-cp36m-linux_aarch64.whl
-RUN python3 -m pip install rasa-nlu==0.14.3 numpy==1.18 scikit-learn==0.20.4
+RUN apt-get -y install python3-scipy
+RUN python3 -m pip install numpy==1.18 scikit-learn==0.20.4 
+RUN python3 -m pip install rasa-nlu==0.14.3 
 RUN python3 -m pip install rospkg
-
+RUN python3 -m pip install -U pip setuptools wheel
+RUN python3 -m pip install -U scipy
 COPY requirements.txt /requirements.txt
 RUN python3 -m pip install -r /requirements.txt
 

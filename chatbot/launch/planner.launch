@@ -5,6 +5,6 @@
     </include>
     <!-- <include file="$(find zordon_nlu)/launch/rasa_nlu.launch">
     </include> -->
-    <node name="chatbot" pkg="chatbot" type="chatbot.py" output="screen" >
+    <node name="planner" pkg="chatbot" type="planner.py" output="screen" >
     </node>
 </launch>

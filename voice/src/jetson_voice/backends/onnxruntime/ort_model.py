@@ -12,6 +12,7 @@ import pycuda.autoinit
 import numpy as np
 import onnxruntime as ort
 
+ort.set_default_logger_severity(3)
 
 class OnnxRuntimeModel:
     """

@@ -168,9 +168,9 @@ class HotwordDetector(object):
             self.audio = pyaudio.PyAudio()
         info = self.audio.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
-        for i in range(0, numdevices):
-                if (self.audio.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                    print("Input Device id ", i, " - ", self.audio.get_device_info_by_host_api_device_index(0, i))
+        # for i in rangInput Devicee(0, numdevices):
+        #         if (self.audio.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
+        #             print(" id ", i, " - ", self.audio.get_device_info_by_host_api_device_index(0, i))
         print('num_channels', self.detector.NumChannels())
         print('sample_rate', self.detector.SampleRate())
         self.stream_in = self.audio.open(
@@ -186,7 +186,8 @@ class HotwordDetector(object):
             # channels=2,
             # rate=44100,
 
-        if interrupt_check():
+        if interrupt_check():    
+            print(f"Stopping wakeword")
             logger.debug("detect voice return")
             return
 
@@ -204,6 +205,7 @@ class HotwordDetector(object):
 
         state = "PASSIVE"
         while self._running is True:
+            print(f"Listening wakeword")
             if interrupt_check():
                 logger.debug("detect voice break")
                 break
