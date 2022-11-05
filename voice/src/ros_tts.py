@@ -88,16 +88,17 @@ class TTSNemo:
         input = req.text
         if self.normalize:
             input = self._normalize(input)
-        input = input[:256]
 
         try:
             # Gabiarra:
             ctx = self.device.make_context()  
-            audio = self.tts(input)
+            audio = self.tts("input")
             if round(sum(audio)/len(audio), 1) == 0.0:
-                ctx = self.device.make_context()
-                audio = self.tts(input)
-                ctx.pop()  
+            	ctx = self.device.make_context()
+            	try:
+                    audio = self.tts(input)
+            	except: pass
+            	ctx.pop()  
             ctx.pop()  
         
             audio_device = AudioOutput(self.output_device, self.tts.sample_rate)

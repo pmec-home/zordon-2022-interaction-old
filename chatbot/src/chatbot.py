@@ -13,6 +13,7 @@ import spacy
 import os
 import re
 from datetime import datetime
+import time
 
 directory = os.path.dirname(os.path.realpath(__file__))
 log_dir = "/home/athome/zordon-2022/zordon-2022-interaction/chatbot/logs"
@@ -83,22 +84,23 @@ class _Chatbot():
     def read(self, message):
         global nlp_list, QandA
         rank = compareToNlpList(message, nlp_list)
-        if(float(rank[0]['similarity']) > 0.65):
+        if(float(rank[0]['similarity']) > 0.6):
             #Grab answer form the Q and A dataframe
             answer = QandA[QandA['QUESTION'] == rank[0]['text']]['ANSWER'].iloc[0]
             #If the answer is in the format ${code} grab the code inside and run it
-            if '$' in answer:
-                code = re.search('\${(.*)}', answer).group(1)
-                answer = eval(code)
+            # if '$' in answer:
+            #     code = re.search('\${(.*)}', answer).group(1)
+            #     answer = eval(code)
             return answer
         return "Sorry I did not understand your question"
 
 class ChatBot():
     def __init__(self, log_dir):
-        
+        os.makedirs(log_dir, exist_ok=True)
         now = datetime.now()
         dt_string = now.strftime("%d_%m_%Y-%H_%M_%S")
         self.log_file = f'{log_dir}/{dt_string}.log'
+        print('Saving log file', self.log_file)
 
         print('init node')
         rospy.init_node("chatbot")
@@ -128,8 +130,9 @@ class ChatBot():
             print(datetime.now(), msg, file=log)
 
     def listen(self):
+        self._write_log('='*60)
         print('Waiting wake word...')
-        print('Waiting wake word')
+        self._write_log('Waiting wake word')
         self.wake_word()
         self._write_log('Recording voice')
         print('Listening command...')
@@ -145,8 +148,9 @@ class ChatBot():
         # print(nlu_response)
         answer = self.chatbot.read(stt_response.transcription)
         self._write_log(f'Answer: {answer}')
-        self.tts(answer)
-        self._write_log('='*60)
+        self.tts(answer[:100])
+
+
 
 if __name__ == "__main__":
     print("Creating ChatBot")

@@ -1,0 +1,23 @@
+FROM jetson-voice-w2v-whisper-ros
+
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt update && apt install -y tzdata && \
+    apt-get install --no-install-recommends -y ffmpeg bash curl git && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}
+
+COPY requirements_tts_service.txt .
+
+RUN pip install PyYAML==6.0 --ignore-installed && \ 
+    pip install --no-cache-dir -r requirements_tts_service.txt && \
+    pip install numpy --upgrade
+
+RUN mkdir -p /tts
+COPY voice/src /tts
+WORKDIR /tts
+COPY tts_service.py main.py
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# docker run -p 8000:8000 -d ghcr.io/ccoreilly/wav2vec2-catala:0.1.0
+# curl -X POST localhost:8000/recognize -F "file=@sample.wav"

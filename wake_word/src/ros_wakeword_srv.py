@@ -58,7 +58,7 @@ class WakeWord:
         print(f"Creating wakeword")
         self.service = rospy.Service('zordon/wake_word', Empty, self) 
         
-        self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.7)
+        self.detector = snowboydecoder.HotwordDetector(model, sensitivity=0.8)
 
         activate_notify()
 
